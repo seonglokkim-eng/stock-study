@@ -22,12 +22,7 @@
   --mono:'IBM Plex Mono',monospace;--sans:'Noto Sans KR',sans-serif;
 }
 html,body{height:100%;background:var(--bg);overflow:hidden;}
-#app{
-  font-family:var(--sans);background:var(--bg);height:100vh;
-  max-width:480px;margin:0 auto;color:var(--text);
-  display:flex;flex-direction:column;position:relative;overflow:hidden;
-}
-
+#app{font-family:var(--sans);background:var(--bg);height:100vh;max-width:480px;margin:0 auto;color:var(--text);display:flex;flex-direction:column;position:relative;overflow:hidden;}
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px 12px;flex-shrink:0;}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.1em;}
@@ -40,18 +35,15 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .search-wrap input:focus{border-color:var(--accent);}
 .search-wrap input::placeholder{color:var(--text3);}
 .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none;}
-
 .filter-bar{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
 .filter-bar::-webkit-scrollbar{display:none;}
 .ftab{flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap;}
 .ftab.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
 .ftab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;}
-
 .cond-bar{display:flex;align-items:center;gap:8px;padding:8px 18px 0;flex-shrink:0;}
 .cond-bar span{font-size:11px;color:var(--text3);white-space:nowrap;}
 .cond-bar input{width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .2s;}
 .cond-bar input:focus{border-color:var(--accent);}
-
 .list-area{flex:1;overflow-y:auto;padding:8px 12px 90px;-webkit-overflow-scrolling:touch;}
 .stock-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 15px 13px 18px;margin-bottom:8px;cursor:pointer;transition:transform .12s;position:relative;overflow:hidden;}
 .stock-card:active{transform:scale(.98);}
@@ -69,14 +61,11 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
 .ibadge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600;}
 .card-date{font-family:var(--mono);font-size:10px;color:var(--text3);}
-
 .empty{text-align:center;padding:60px 20px;color:var(--text3);}
 .empty .big{font-size:44px;margin-bottom:12px;}
 .empty p{font-size:13px;line-height:1.7;}
-
 .fab{position:absolute;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(217,119,87,.35);display:flex;align-items:center;justify-content:center;z-index:50;transition:transform .12s;}
 .fab:active{transform:scale(.93);}
-
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;}
 .sheet{background:var(--surface);border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease;}
 .sheet-detail{background:var(--bg);}
@@ -89,7 +78,6 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .btn-save{background:var(--accent);border:none;color:#fff;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);}
 .btn-del{background:transparent;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px;line-height:1;}
 .btn-edit{background:var(--accent);border:none;color:#fff;padding:8px 22px;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);}
-
 .form-body{padding:6px 18px;}
 .fsec{margin-top:18px;}
 .fsec-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:11px;padding-bottom:6px;border-bottom:1px solid var(--border);}
@@ -100,7 +88,6 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .field textarea{resize:none;line-height:1.6;}
 .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239E9890' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-
 .int-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .int-opt{padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text2);}
 .int-opt .idot2{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
@@ -109,8 +96,6 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .val-opt.on-cheap{border-color:var(--green);background:rgba(74,155,111,.1);color:var(--green);}
 .val-opt.on-fair{border-color:var(--blue);background:rgba(91,127,166,.1);color:var(--blue);}
 .val-opt.on-expensive{border-color:var(--red);background:rgba(184,84,80,.1);color:var(--red);}
-
-/* ── DETAIL ── */
 .d-hero{padding:18px 18px 14px;background:var(--surface);border-bottom:1px solid var(--border);}
 .d-hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
 .d-name{font-size:22px;font-weight:700;line-height:1.2;}
@@ -151,21 +136,17 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
       <input type="search" placeholder="모든 내용 검색..." id="searchInput" oninput="renderList()"/>
     </div>
   </div>
-
   <div class="filter-bar" id="filterBar"></div>
-
   <div class="cond-bar">
     <span>PER 이하</span>
     <input type="number" id="perFilter" placeholder="예: 15" oninput="renderList()"/>
     <span>PBR 이하</span>
     <input type="number" id="pbrFilter" placeholder="예: 1.5" oninput="renderList()"/>
   </div>
-
   <div class="list-area" id="listArea"></div>
   <button class="fab" onclick="openForm(null)">+</button>
 </div>
 
-<!-- Form Sheet -->
 <div class="sheet-overlay" id="formOverlay" style="display:none" onclick="overlayClose(event,'formOverlay')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -181,7 +162,6 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
   </div>
 </div>
 
-<!-- Detail Sheet -->
 <div class="sheet-overlay" id="detailOverlay" style="display:none" onclick="overlayClose(event,'detailOverlay')">
   <div class="sheet sheet-detail">
     <div class="sheet-handle"></div>
@@ -204,13 +184,7 @@ const LEVELS=[
   {v:"consider",label:"매수 검토",color:"#E3F2EA",dot:"#2E8A55"},
   {v:"core",label:"핵심 관심",color:"#FDF0E6",dot:"#C96A30"},
 ];
-const EMPTY={id:null,name:"",ticker:"",market:"KOSPI",sector:"",studiedAt:today(),
-  bizSummary:"",mainClients:"",competitors:"",moat:"",
-  marketCap:"",revenueDir:"",debtLevel:"",profitStatus:"",
-  growthDriver:"",riskFactors:"",momentum:"",
-  per:"",pbr:"",pricePosition:"",valuation:"",
-  interestLevel:"hold",buyCondition:"",memo:""};
-
+const EMPTY={id:null,name:"",ticker:"",market:"KOSPI",sector:"",studiedAt:today(),bizSummary:"",mainClients:"",competitors:"",moat:"",marketCap:"",revenueDir:"",debtLevel:"",profitStatus:"",growthDriver:"",riskFactors:"",momentum:"",per:"",pbr:"",pricePosition:"",valuation:"",interestLevel:"hold",buyCondition:"",memo:""};
 let stocks=[];
 let filterLevel="all";
 let editId=null;
@@ -372,15 +346,7 @@ function gv(id){const el=document.getElementById(id);return el?el.value:"";}
 function saveStock(){
   const name=gv("f_name").trim();
   if(!name){alert("종목명을 입력해주세요.");return;}
-  const s={id:editId||Date.now().toString(),name,ticker:gv("f_ticker").trim(),market:gv("f_market"),
-    sector:gv("f_sector"),studiedAt:gv("f_studiedAt"),bizSummary:gv("f_bizSummary").trim(),
-    mainClients:gv("f_mainClients").trim(),competitors:gv("f_competitors").trim(),moat:gv("f_moat").trim(),
-    marketCap:gv("f_marketCap").trim(),revenueDir:gv("f_revenueDir"),debtLevel:gv("f_debtLevel"),
-    profitStatus:gv("f_profitStatus"),growthDriver:gv("f_growthDriver").trim(),
-    riskFactors:gv("f_riskFactors").trim(),momentum:gv("f_momentum").trim(),
-    per:gv("f_per").trim(),pbr:gv("f_pbr").trim(),pricePosition:gv("f_pricePosition"),
-    valuation:gv("f_valuation"),interestLevel:gv("f_interestLevel")||"hold",
-    buyCondition:gv("f_buyCondition").trim(),memo:gv("f_memo").trim()};
+  const s={id:editId||Date.now().toString(),name,ticker:gv("f_ticker").trim(),market:gv("f_market"),sector:gv("f_sector"),studiedAt:gv("f_studiedAt"),bizSummary:gv("f_bizSummary").trim(),mainClients:gv("f_mainClients").trim(),competitors:gv("f_competitors").trim(),moat:gv("f_moat").trim(),marketCap:gv("f_marketCap").trim(),revenueDir:gv("f_revenueDir"),debtLevel:gv("f_debtLevel"),profitStatus:gv("f_profitStatus"),growthDriver:gv("f_growthDriver").trim(),riskFactors:gv("f_riskFactors").trim(),momentum:gv("f_momentum").trim(),per:gv("f_per").trim(),pbr:gv("f_pbr").trim(),pricePosition:gv("f_pricePosition"),valuation:gv("f_valuation"),interestLevel:gv("f_interestLevel")||"hold",buyCondition:gv("f_buyCondition").trim(),memo:gv("f_memo").trim()};
   const idx=stocks.findIndex(x=>x.id===editId);
   if(idx>=0)stocks[idx]=s;else stocks.push(s);
   save();closeSheet("formOverlay");renderAll();
