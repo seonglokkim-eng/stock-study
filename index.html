@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#f0a030"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="주식공부"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<title>STOCK.STUDY</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0e0e14;--surface:#16161f;--surface2:#1e1e2a;--surface3:#252535;
+  --border:#2a2a3a;--border2:#333348;
+  --text:#e8e8f0;--text2:#9898b0;--text3:#5a5a72;
+  --accent:#f0a030;--green:#4abf7a;--blue:#4a7abf;--red:#bf4a5a;
+  --mono:'IBM Plex Mono',monospace;--sans:'Noto Sans KR',sans-serif;
+}
+html,body{height:100%;background:var(--bg);overflow:hidden;}
+#app{
+  font-family:var(--sans);background:var(--bg);height:100vh;
+  max-width:480px;margin:0 auto;color:var(--text);
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 18px 12px;flex-shrink:0;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.1em;}
+.logo span{color:var(--text3);}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.count-badge{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:4px;}
+.export-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans);}
+.search-wrap{position:relative;}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 34px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s;}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-wrap input::placeholder{color:var(--text3);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none;}
+.filter-bar{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.ftab{flex-shrink:0;font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap;}
+.ftab.on{background:var(--accent);border-color:var(--accent);color:#0e0e14;font-weight:700;}
+.ftab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.list-area{flex:1;overflow-y:auto;padding:8px 12px 90px;-webkit-overflow-scrolling:touch;}
+.stock-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 15px 13px 18px;margin-bottom:8px;cursor:pointer;transition:transform .12s;position:relative;overflow:hidden;}
+.stock-card:active{transform:scale(.98);}
+.stock-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:12px 0 0 12px;}
+.c-watch::before{background:#555;}
+.c-hold::before{background:var(--blue);}
+.c-consider::before{background:var(--green);}
+.c-core::before{background:var(--accent);}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.card-name{font-size:15px;font-weight:700;line-height:1.2;}
+.card-ticker{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px;}
+.card-mkt{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;background:var(--surface3);color:var(--text3);border:1px solid var(--border);flex-shrink:0;}
+.card-sector{display:inline-block;font-size:11px;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:4px;margin-top:3px;}
+.card-summary{font-size:12px;color:var(--text2);margin-top:7px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.ibadge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600;}
+.card-date{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.empty{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty .big{font-size:44px;margin-bottom:12px;}
+.empty p{font-size:13px;line-height:1.7;}
+.fab{position:absolute;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:#0e0e14;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(240,160,48,.4);display:flex;align-items:center;justify-content:center;z-index:50;transition:transform .12s;}
+.fab:active{transform:scale(.93);}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;flex-direction:column;justify-content:flex-end;}
+.sheet{background:var(--surface);border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .22s ease;}
+.sheet-detail{background:var(--bg);}
+@keyframes slideUp{from{transform:translateY(50px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;}
+.sheet-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:inherit;z-index:10;}
+.sheet-title{font-size:16px;font-weight:700;}
+.sheet-actions{display:flex;gap:8px;align-items:center;}
+.btn-cancel{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--sans);}
+.btn-save{background:var(--accent);border:none;color:#0e0e14;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+.btn-del{background:transparent;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px;line-height:1;}
+.btn-edit{background:var(--accent);border:none;color:#0e0e14;padding:8px 22px;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);}
+.form-body{padding:6px 18px;}
+.fsec{margin-top:18px;}
+.fsec-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:11px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500;}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);}
+.field textarea{resize:none;line-height:1.6;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.int-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.int-opt{padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text2);}
+.int-opt .idot2{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.val-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.val-opt{padding:9px 4px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;text-align:center;font-size:12px;font-weight:500;color:var(--text2);transition:all .15s;}
+.val-opt.on-cheap{border-color:var(--green);background:rgba(74,191,122,.12);color:var(--green);}
+.val-opt.on-fair{border-color:var(--blue);background:rgba(74,122,191,.12);color:var(--blue);}
+.val-opt.on-expensive{border-color:var(--red);background:rgba(191,74,90,.12);color:var(--red);}
+.d-hero{padding:18px 18px 14px;background:var(--surface);border-bottom:1px solid var(--border);}
+.d-hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.d-name{font-size:22px;font-weight:700;line-height:1.2;}
+.d-ticker{font-family:var(--mono);font-size:12px;color:var(--text3);margin-top:3px;}
+.d-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);}
+.d-body{padding:14px 18px 50px;}
+.d-sec{margin-bottom:18px;}
+.d-sec-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.d-row{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start;}
+.d-lbl{font-size:11px;color:var(--text3);width:72px;flex-shrink:0;padding-top:1px;line-height:1.5;}
+.d-val{font-size:13px;color:var(--text);flex:1;line-height:1.6;}
+.d-val.empty{color:var(--text3);font-style:italic;}
+.fin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.fin-cell{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;}
+.fin-lbl{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.fin-val{font-family:var(--mono);font-size:13px;color:var(--text);font-weight:500;}
+.pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.pill-green{background:rgba(74,191,122,.15);color:var(--green);}
+.pill-red{background:rgba(191,74,90,.15);color:var(--red);}
+.pill-blue{background:rgba(74,122,191,.15);color:var(--blue);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">STOCK<span>.</span>STUDY</div>
+      <div class="hdr-right">
+        <span class="count-badge" id="cnt">0 종목</span>
+        <button class="export-btn" onclick="exportJSON()">내보내기</button>
+        <button class="export-btn" onclick="importTrigger()">불러오기</button>
+        <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)"/>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="search" placeholder="종목명, 티커, 섹터 검색..." id="searchInput" oninput="renderList()"/>
+    </div>
+  </div>
+  <div class="filter-bar" id="filterBar"></div>
+  <div class="list-area" id="listArea"></div>
+  <button class="fab" onclick="openForm(null)">+</button>
+</div>
+
+<div class="sheet-overlay" id="formOverlay" style="display:none" onclick="overlayClose(event,'formOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-title" id="formTitle">새 종목 추가</div>
+      <div class="sheet-actions">
+        <button class="btn-del" id="delBtn" onclick="deleteStock()" style="display:none">🗑</button>
+        <button class="btn-cancel" onclick="closeSheet('formOverlay')">취소</button>
+        <button class="btn-save" onclick="saveStock()">저장</button>
+      </div>
+    </div>
+    <div class="form-body" id="formBody"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="detailOverlay" style="display:none" onclick="overlayClose(event,'detailOverlay')">
+  <div class="sheet sheet-detail">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <button class="btn-cancel" onclick="closeSheet('detailOverlay')">← 목록</button>
+      <div class="sheet-actions">
+        <button class="btn-edit" onclick="editFromDetail()">수정</button>
+      </div>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<script>
+const SECTORS=["반도체","디스플레이","2차전지","자동차","바이오/제약","IT서비스","게임","엔터","화학","철강/소재","금융/보험","건설/부동산","소비재","에너지","방산/항공","유통/물류","기계/설비","기타"];
+const MARKETS=["KOSPI","KOSDAQ"];
+const LEVELS=[
+  {v:"watch",label:"관심 없음",color:"#4a4a5a",dot:"#666"},
+  {v:"hold",label:"보류",color:"#2a3a5a",dot:"#4a7abf"},
+  {v:"consider",label:"매수 검토",color:"#2a4a3a",dot:"#4abf7a"},
+  {v:"core",label:"핵심 관심",color:"#4a3a20",dot:"#f0a030"},
+];
+const EMPTY={id:null,name:"",ticker:"",market:"KOSPI",sector:"",studiedAt:today(),bizSummary:"",mainClients:"",competitors:"",moat:"",marketCap:"",revenueDir:"",debtLevel:"",profitStatus:"",growthDriver:"",riskFactors:"",momentum:"",per:"",pbr:"",pricePosition:"",valuation:"",interestLevel:"hold",buyCondition:"",memo:""};
+let stocks=[];
+let filterLevel="all";
+let editId=null;
+let detailId=null;
+
+function today(){return new Date().toISOString().split("T")[0];}
+function linfo(v){return LEVELS.find(l=>l.v===v)||LEVELS[1];}
+function load(){try{const d=localStorage.getItem("ss_stocks");if(d)stocks=JSON.parse(d);}catch(e){}renderAll();}
+function save(){try{localStorage.setItem("ss_stocks",JSON.stringify(stocks));}catch(e){}}
+function renderAll(){document.getElementById("cnt").textContent=stocks.length+" 종목";renderTabs();renderList();}
+
+function renderTabs(){
+  const bar=document.getElementById("filterBar");
+  let h=`<button class="ftab ${filterLevel==="all"?"on":""}" onclick="setFilter('all')">전체 (${stocks.length})</button>`;
+  [...LEVELS].reverse().forEach(l=>{
+    const n=stocks.filter(s=>s.interestLevel===l.v).length;
+    h+=`<button class="ftab ${filterLevel===l.v?"on":""}" onclick="setFilter('${l.v}')"><span class="dot" style="background:${l.dot}"></span>${l.label} (${n})</button>`;
+  });
+  bar.innerHTML=h;
+}
+
+function setFilter(v){filterLevel=v;renderAll();}
+
+function renderList(){
+  const q=document.getElementById("searchInput").value.toLowerCase();
+  const order={core:0,consider:1,hold:2,watch:3};
+  const filtered=stocks.filter(s=>{
+    if(filterLevel!=="all"&&s.interestLevel!==filterLevel)return false;
+    if(!q)return true;
+    return[s.name,s.ticker,s.sector,s.bizSummary].some(x=>(x||"").toLowerCase().includes(q));
+  }).sort((a,b)=>(order[a.interestLevel]??4)-(order[b.interestLevel]??4));
+  const area=document.getElementById("listArea");
+  if(!filtered.length){
+    area.innerHTML=`<div class="empty"><div class="big">📈</div><p>${stocks.length?'검색 결과가 없어요.':'아직 기록한 종목이 없어요.<br/>+ 버튼을 눌러 첫 종목을 추가해보세요.'}</p></div>`;
+    return;
+  }
+  area.innerHTML=filtered.map(s=>{
+    const li=linfo(s.interestLevel);
+    return`<div class="stock-card c-${s.interestLevel}" onclick="openDetail('${s.id}')">
+      <div class="card-top">
+        <div><div class="card-name">${esc(s.name)||'종목명 없음'}</div><div class="card-ticker">${esc(s.ticker)||'—'}</div></div>
+        <div class="card-mkt">${s.market}</div>
+      </div>
+      ${s.sector?`<span class="card-sector">${esc(s.sector)}</span>`:''}
+      ${s.bizSummary?`<div class="card-summary">${esc(s.bizSummary)}</div>`:''}
+      <div class="card-bottom">
+        <span class="ibadge" style="background:${li.color};color:${li.dot};border:1px solid ${li.dot}40">${li.label}</span>
+        <span class="card-date">${s.studiedAt||''}</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function openForm(id){
+  editId=id;
+  const s=id?stocks.find(x=>x.id===id):{...EMPTY,id:Date.now().toString(),studiedAt:today()};
+  document.getElementById("formTitle").textContent=id?"종목 수정":"새 종목 추가";
+  document.getElementById("delBtn").style.display=id?"":"none";
+  document.getElementById("formBody").innerHTML=buildForm(s);
+  show("formOverlay");
+}
+
+function buildForm(s){
+  const selOpts=(arr,val)=>{
+    let o=`<option value="">— 선택 —</option>`;
+    arr.forEach(x=>o+=`<option value="${x}"${val===x?" selected":""}>${x}</option>`);
+    return o;
+  };
+  const intGrid=LEVELS.map(l=>`
+    <div class="int-opt" id="iopt_${l.v}"
+      style="${s.interestLevel===l.v?`background:${l.color};border-color:${l.dot}80;color:${l.dot}`:""}"
+      onclick="setInterest('${l.v}')">
+      <span class="idot2" style="background:${l.dot}"></span>${l.label}
+    </div>`).join("");
+  const valGrid=[{v:"cheap",label:"저평가",cls:"on-cheap"},{v:"fair",label:"적정",cls:"on-fair"},{v:"expensive",label:"고평가",cls:"on-expensive"}]
+    .map(o=>`<div class="val-opt ${s.valuation===o.v?o.cls:""}" id="vopt_${o.v}" onclick="setVal('${o.v}')">${o.label}</div>`).join("");
+  return`
+  <div class="fsec">
+    <div class="fsec-title">기본 식별 정보</div>
+    <div class="row2">
+      <div class="field"><label>종목명 *</label><input id="f_name" value="${esc(s.name)}" placeholder="삼성전자"/></div>
+      <div class="field"><label>티커</label><input id="f_ticker" value="${esc(s.ticker)}" placeholder="005930" style="font-family:var(--mono)"/></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>시장</label><select id="f_market">${selOpts(MARKETS,s.market)}</select></div>
+      <div class="field"><label>공부 날짜</label><input type="date" id="f_studiedAt" value="${s.studiedAt}"/></div>
+    </div>
+    <div class="field"><label>섹터</label><select id="f_sector">${selOpts(SECTORS,s.sector)}</select></div>
+  </div>
+  <div class="fsec">
+    <div class="fsec-title">🔍 사업 이해</div>
+    <div class="field"><label>핵심 사업 한 줄 요약</label><textarea id="f_bizSummary" rows="2" placeholder="이 회사는 ○○으로 돈 번다">${esc(s.bizSummary)}</textarea></div>
+    <div class="field"><label>주요 고객사 / 납품처</label><input id="f_mainClients" value="${esc(s.mainClients)}" placeholder="애플, 삼성전자 등"/></div>
+    <div class="field"><label>경쟁사</label><input id="f_competitors" value="${esc(s.competitors)}" placeholder="국내외 주요 경쟁사"/></div>
+    <div class="field"><label>진입장벽 / 차별점</label><textarea id="f_moat" rows="2" placeholder="왜 이 회사인가?">${esc(s.moat)}</textarea></div>
+  </div>
+  <div class="fsec">
+    <div class="fsec-title">📊 재무 스냅샷</div>
+    <div class="row2">
+      <div class="field"><label>시가총액 (억원)</label><input id="f_marketCap" value="${esc(s.marketCap)}" placeholder="45,000" style="font-family:var(--mono)"/></div>
+      <div class="field"><label>부채 수준</label><select id="f_debtLevel">${selOpts(["낮음 (안정적)","보통","높음 (주의)"],s.debtLevel)}</select></div>
+    </div>
+    <div class="field"><label>매출·영업이익 추이</label><select id="f_revenueDir">${selOpts(["성장세 (연속 증가)","정체","감소세","회복 중","변동성 큼"],s.revenueDir)}</select></div>
+    <div class="field"><label>흑자/적자 상태</label><select id="f_profitStatus">${selOpts(["흑자 안정","흑자 전환","적자 지속","적자 전환","턴어라운드 기대"],s.profitStatus)}</select></div>
+  </div>
+  <div class="fsec">
+    <div class="fsec-title">🚀 투자 포인트</div>
+    <div class="field"><label>성장 드라이버</label><textarea id="f_growthDriver" rows="2" placeholder="신제품, 신시장, 고객사 확대 등">${esc(s.growthDriver)}</textarea></div>
+    <div class="field"><label>리스크 요인</label><textarea id="f_riskFactors" rows="2" placeholder="규제, 경쟁 심화, 고객 의존도 등">${esc(s.riskFactors)}</textarea></div>
+    <div class="field"><label>현재 모멘텀</label><input id="f_momentum" value="${esc(s.momentum)}" placeholder="현재 주가에 영향 중인 이슈"/></div>
+  </div>
+  <div class="fsec">
+    <div class="fsec-title">💰 밸류에이션</div>
+    <div class="row2">
+      <div class="field"><label>PER</label><input id="f_per" value="${esc(s.per)}" placeholder="12.5x" style="font-family:var(--mono)"/></div>
+      <div class="field"><label>PBR</label><input id="f_pbr" value="${esc(s.pbr)}" placeholder="1.2x" style="font-family:var(--mono)"/></div>
+    </div>
+    <div class="field"><label>52주 고저 대비 위치</label><select id="f_pricePosition">${selOpts(["52주 고점 근처","중간 위치","52주 저점 근처"],s.pricePosition)}</select></div>
+    <div class="field"><label>내 밸류에이션 판단</label><div class="val-grid">${valGrid}</div></div>
+    <input type="hidden" id="f_valuation" value="${s.valuation}"/>
+  </div>
+  <div class="fsec" style="margin-bottom:30px">
+    <div class="fsec-title">🗂 종합 판단</div>
+    <div class="field"><label>관심도</label><div class="int-grid">${intGrid}</div></div>
+    <input type="hidden" id="f_interestLevel" value="${s.interestLevel}"/>
+    <div class="field"><label>매수 조건</label><textarea id="f_buyCondition" rows="2" placeholder="○○ 가격대 오면 살 것 / ○○ 실적 확인 후">${esc(s.buyCondition)}</textarea></div>
+    <div class="field"><label>메모 (공시·IR·뉴스)</label><textarea id="f_memo" rows="3" placeholder="인상 깊었던 점, 다음에 확인할 것 등 자유롭게">${esc(s.memo)}</textarea></div>
+  </div>`;
+}
+
+function setInterest(v){
+  document.getElementById("f_interestLevel").value=v;
+  LEVELS.forEach(l=>{
+    const el=document.getElementById("iopt_"+l.v);if(!el)return;
+    if(l.v===v){el.style.background=l.color;el.style.borderColor=l.dot+"80";el.style.color=l.dot;}
+    else{el.style.background="";el.style.borderColor="";el.style.color="";}
+  });
+}
+
+function setVal(v){
+  const cur=document.getElementById("f_valuation").value;
+  const next=cur===v?"":v;
+  document.getElementById("f_valuation").value=next;
+  [{v:"cheap",cls:"on-cheap"},{v:"fair",cls:"on-fair"},{v:"expensive",cls:"on-expensive"}].forEach(o=>{
+    const el=document.getElementById("vopt_"+o.v);if(!el)return;
+    el.className="val-opt"+(next===o.v?" "+o.cls:"");
+  });
+}
+
+function gv(id){const el=document.getElementById(id);return el?el.value:"";}
+
+function saveStock(){
+  const name=gv("f_name").trim();
+  if(!name){alert("종목명을 입력해주세요.");return;}
+  const s={id:editId||Date.now().toString(),name,ticker:gv("f_ticker").trim(),market:gv("f_market"),sector:gv("f_sector"),studiedAt:gv("f_studiedAt"),bizSummary:gv("f_bizSummary").trim(),mainClients:gv("f_mainClients").trim(),competitors:gv("f_competitors").trim(),moat:gv("f_moat").trim(),marketCap:gv("f_marketCap").trim(),revenueDir:gv("f_revenueDir"),debtLevel:gv("f_debtLevel"),profitStatus:gv("f_profitStatus"),growthDriver:gv("f_growthDriver").trim(),riskFactors:gv("f_riskFactors").trim(),momentum:gv("f_momentum").trim(),per:gv("f_per").trim(),pbr:gv("f_pbr").trim(),pricePosition:gv("f_pricePosition"),valuation:gv("f_valuation"),interestLevel:gv("f_interestLevel")||"hold",buyCondition:gv("f_buyCondition").trim(),memo:gv("f_memo").trim()};
+  const idx=stocks.findIndex(x=>x.id===editId);
+  if(idx>=0)stocks[idx]=s;else stocks.push(s);
+  save();closeSheet("formOverlay");renderAll();
+}
+
+function deleteStock(){
+  if(!confirm("이 종목을 삭제할까요?"))return;
+  stocks=stocks.filter(s=>s.id!==editId);
+  save();closeSheet("formOverlay");renderAll();
+}
+
+function openDetail(id){
+  detailId=id;
+  const s=stocks.find(x=>x.id===id);if(!s)return;
+  document.getElementById("detailBody").innerHTML=buildDetail(s);
+  show("detailOverlay");
+}
+
+function buildDetail(s){
+  const li=linfo(s.interestLevel);
+  const drow=(lbl,val)=>`<div class="d-row"><div class="d-lbl">${lbl}</div><div class="d-val ${val?"":"empty"}">${esc(val)||"미입력"}</div></div>`;
+  const profPill=s.profitStatus?`<span class="pill ${s.profitStatus.includes("흑자")?"pill-green":s.profitStatus.includes("적자")?"pill-red":"pill-blue"}">${esc(s.profitStatus)}</span>`:"";
+  const valPill=s.valuation?`<span class="pill ${s.valuation==="cheap"?"pill-green":s.valuation==="expensive"?"pill-red":"pill-blue"}">${s.valuation==="cheap"?"저평가":s.valuation==="expensive"?"고평가":"적정"}</span>`:"";
+  return`
+  <div class="d-hero">
+    <div class="d-hero-top">
+      <div><div class="d-name">${esc(s.name)}</div><div class="d-ticker" style="font-family:var(--mono)">${esc(s.ticker)||"—"} · ${s.market}</div></div>
+      <span class="ibadge" style="font-size:11px;padding:4px 12px;border-radius:20px;font-weight:600;background:${li.color};color:${li.dot};border:1px solid ${li.dot}40">${li.label}</span>
+    </div>
+    <div class="d-badges">
+      ${s.sector?`<span class="badge">${esc(s.sector)}</span>`:""}
+      ${profPill}${valPill}
+      ${s.studiedAt?`<span class="badge" style="font-family:var(--mono);font-size:10px">📅 ${s.studiedAt}</span>`:""}
+    </div>
+  </div>
+  <div class="d-body">
+    <div class="d-sec"><div class="d-sec-title">🔍 사업 이해</div>${drow("핵심 사업",s.bizSummary)}${drow("주요 고객사",s.mainClients)}${drow("경쟁사",s.competitors)}${drow("진입장벽",s.moat)}</div>
+    <div class="d-sec"><div class="d-sec-title">📊 재무 스냅샷</div>
+      <div class="fin-grid">
+        <div class="fin-cell"><div class="fin-lbl">시가총액</div><div class="fin-val">${s.marketCap?esc(s.marketCap)+"억":"—"}</div></div>
+        <div class="fin-cell"><div class="fin-lbl">PER</div><div class="fin-val">${esc(s.per)||"—"}</div></div>
+        <div class="fin-cell"><div class="fin-lbl">PBR</div><div class="fin-val">${esc(s.pbr)||"—"}</div></div>
+      </div>
+      ${drow("매출 추이",s.revenueDir)}${drow("부채 수준",s.debtLevel)}${drow("52주 위치",s.pricePosition)}
+    </div>
+    <div class="d-sec"><div class="d-sec-title">🚀 투자 포인트</div>${drow("성장 드라이버",s.growthDriver)}${drow("리스크",s.riskFactors)}${drow("모멘텀",s.momentum)}</div>
+    <div class="d-sec"><div class="d-sec-title">🗂 종합 판단</div>${drow("매수 조건",s.buyCondition)}${drow("메모",s.memo)}</div>
+  </div>`;
+}
+
+function editFromDetail(){closeSheet("detailOverlay");setTimeout(()=>openForm(detailId),100);}
+function show(id){document.getElementById(id).style.display="flex";}
+function closeSheet(id){document.getElementById(id).style.display="none";}
+function overlayClose(e,id){if(e.target===e.currentTarget)closeSheet(id);}
+
+function exportJSON(){
+  if(!stocks.length){alert("저장된 종목이 없어요.");return;}
+  const blob=new Blob([JSON.stringify(stocks,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`stockstudy_${today()}.json`;a.click();
+}
+function importTrigger(){document.getElementById("imp").click();}
+function importJSON(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data))throw new Error();
+      if(!confirm(`${data.length}개 종목을 불러올까요? 기존 데이터에 병합됩니다.`))return;
+      const ids=new Set(stocks.map(s=>s.id));
+      data.forEach(s=>{if(!ids.has(s.id))stocks.push(s);});
+      save();renderAll();alert("불러오기 완료!");
+    }catch{alert("올바른 파일이 아니에요.");}
+  };
+  r.readAsText(f);e.target.value="";
+}
+
+if("serviceWorker"in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+load();
+</script>
+</body>
+</html>
