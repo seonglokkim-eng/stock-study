@@ -209,7 +209,7 @@ function renderList(){
   const filtered=stocks.filter(s=>{
     if(filterLevel!=="all"&&s.interestLevel!==filterLevel)return false;
     if(!q)return true;
-    return[s.name,s.ticker,s.sector,s.bizSummary].some(x=>(x||"").toLowerCase().includes(q));
+    return Object.values(s).some(x=>(x||"").toString().toLowerCase().includes(q));
   }).sort((a,b)=>(order[a.interestLevel]??4)-(order[b.interestLevel]??4));
   const area=document.getElementById("listArea");
   if(!filtered.length){
