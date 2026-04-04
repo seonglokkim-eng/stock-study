@@ -378,7 +378,7 @@ function deleteStock(){
   if(!confirm("이 종목을 삭제할까요?"))return;
   stocks=stocks.filter(s=>String(s.id)!==String(editId));
   save();closeSheet("formOverlay");renderAll();
-  syncToSheet(true);
+  /*syncToSheet(true);*/
 }
 
 function openDetail(id){
