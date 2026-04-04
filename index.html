@@ -27,9 +27,11 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.1em;}
 .logo span{color:var(--text3);}
-.hdr-right{display:flex;align-items:center;gap:8px;}
+.hdr-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .count-badge{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:4px;}
-.export-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans);}
+.export-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
+.export-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+.sync-status{font-family:var(--mono);font-size:10px;color:var(--text3);padding:2px 0;}
 .search-wrap{position:relative;}
 .search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 34px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;transition:border-color .2s;}
 .search-wrap input:focus{border-color:var(--accent);}
@@ -117,6 +119,8 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .pill-green{background:rgba(74,155,111,.12);color:var(--green);}
 .pill-red{background:rgba(184,84,80,.12);color:var(--red);}
 .pill-blue{background:rgba(91,127,166,.12);color:var(--blue);}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1714;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
@@ -126,8 +130,10 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
       <div class="logo">STOCK<span>.</span>STUDY</div>
       <div class="hdr-right">
         <span class="count-badge" id="cnt">0 종목</span>
-        <button class="export-btn" onclick="exportJSON()">내보내기</button>
-        <button class="export-btn" onclick="importTrigger()">불러오기</button>
+        <button class="export-btn primary" onclick="syncToSheet()">☁ 시트저장</button>
+        <button class="export-btn" onclick="syncFromSheet()">☁ 불러오기</button>
+        <button class="export-btn" onclick="exportJSON()">JSON</button>
+        <button class="export-btn" onclick="importTrigger()">JSON↑</button>
         <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(event)"/>
       </div>
     </div>
@@ -136,13 +142,16 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
       <input type="search" placeholder="모든 내용 검색..." id="searchInput" oninput="renderList()"/>
     </div>
   </div>
+
   <div class="filter-bar" id="filterBar"></div>
+
   <div class="cond-bar">
     <span>PER 이하</span>
     <input type="number" id="perFilter" placeholder="예: 15" oninput="renderList()"/>
     <span>PBR 이하</span>
     <input type="number" id="pbrFilter" placeholder="예: 1.5" oninput="renderList()"/>
   </div>
+
   <div class="list-area" id="listArea"></div>
   <button class="fab" onclick="openForm(null)">+</button>
 </div>
@@ -175,7 +184,10 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
+const GAS_URL="https://script.google.com/macros/s/AKfycbzzRn2GJ7OvEDKaJ153vaYWnZPHAGkmq6muLoFh6NYlqbHlYBIql5cfE6gMLGKpP-db/exec";
 const SECTORS=["반도체","디스플레이","2차전지","자동차","바이오/제약","IT서비스","게임","엔터","화학","철강/소재","금융/보험","건설/부동산","소비재","에너지","방산/항공","유통/물류","기계/설비","기타"];
 const MARKETS=["KOSPI","KOSDAQ"];
 const LEVELS=[
@@ -195,6 +207,12 @@ function linfo(v){return LEVELS.find(l=>l.v===v)||LEVELS[1];}
 function load(){try{const d=localStorage.getItem("ss_stocks");if(d)stocks=JSON.parse(d);}catch(e){}renderAll();}
 function save(){try{localStorage.setItem("ss_stocks",JSON.stringify(stocks));}catch(e){}}
 function renderAll(){document.getElementById("cnt").textContent=stocks.length+" 종목";renderTabs();renderList();}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2500);
+}
 
 function renderTabs(){
   const bar=document.getElementById("filterBar");
@@ -350,12 +368,14 @@ function saveStock(){
   const idx=stocks.findIndex(x=>x.id===editId);
   if(idx>=0)stocks[idx]=s;else stocks.push(s);
   save();closeSheet("formOverlay");renderAll();
+  syncToSheet(true);
 }
 
 function deleteStock(){
   if(!confirm("이 종목을 삭제할까요?"))return;
   stocks=stocks.filter(s=>s.id!==editId);
   save();closeSheet("formOverlay");renderAll();
+  syncToSheet(true);
 }
 
 function openDetail(id){
@@ -413,8 +433,35 @@ function show(id){document.getElementById(id).style.display="flex";}
 function closeSheet(id){document.getElementById(id).style.display="none";}
 function overlayClose(e,id){if(e.target===e.currentTarget)closeSheet(id);}
 
+/* ── 구글 시트 동기화 ── */
+async function syncToSheet(silent=false){
+  if(!stocks.length){if(!silent)showToast("저장된 종목이 없어요.");return;}
+  try{
+    if(!silent)showToast("구글 시트에 저장 중...");
+    const res=await fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"save",stocks}),headers:{"Content-Type":"text/plain"}});
+    const data=await res.json();
+    if(data.ok)showToast("☁ 시트 저장 완료!");
+    else if(!silent)showToast("저장 실패: "+data.msg);
+  }catch(e){if(!silent)showToast("오류: "+e.message);}
+}
+
+async function syncFromSheet(){
+  try{
+    showToast("구글 시트에서 불러오는 중...");
+    const res=await fetch(GAS_URL+"?t="+Date.now());
+    const data=await res.json();
+    if(!data.ok){showToast("불러오기 실패");return;}
+    if(!data.data.length){showToast("시트에 저장된 종목이 없어요.");return;}
+    if(!confirm(`${data.data.length}개 종목을 불러올까요?\n현재 데이터에 병합됩니다.`))return;
+    const ids=new Set(stocks.map(s=>s.id));
+    data.data.forEach(s=>{if(!ids.has(s.id))stocks.push(s);});
+    save();renderAll();showToast("불러오기 완료!");
+  }catch(e){showToast("오류: "+e.message);}
+}
+
+/* ── JSON 백업 ── */
 function exportJSON(){
-  if(!stocks.length){alert("저장된 종목이 없어요.");return;}
+  if(!stocks.length){showToast("저장된 종목이 없어요.");return;}
   const blob=new Blob([JSON.stringify(stocks,null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download=`stockstudy_${today()}.json`;a.click();
@@ -430,8 +477,8 @@ function importJSON(e){
       if(!confirm(`${data.length}개 종목을 불러올까요? 기존 데이터에 병합됩니다.`))return;
       const ids=new Set(stocks.map(s=>s.id));
       data.forEach(s=>{if(!ids.has(s.id))stocks.push(s);});
-      save();renderAll();alert("불러오기 완료!");
-    }catch{alert("올바른 파일이 아니에요.");}
+      save();renderAll();showToast("JSON 불러오기 완료!");
+    }catch{showToast("올바른 파일이 아니에요.");}
   };
   r.readAsText(f);e.target.value="";
 }
