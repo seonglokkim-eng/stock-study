@@ -246,7 +246,7 @@ function renderList(){
   }
   area.innerHTML=filtered.map(s=>{
     const li=linfo(s.interestLevel);
-    return`<div class="stock-card c-${s.interestLevel}" onclick="openDetail('${s.id}')">
+    return`<div class="stock-card c-${s.interestLevel}" data-id="${esc(String(s.id))}">
       <div class="card-top">
         <div><div class="card-name">${esc(s.name)||'종목명 없음'}</div><div class="card-ticker">${esc(s.ticker)||'—'}</div></div>
         <div class="card-mkt">${s.market}</div>
@@ -260,7 +260,10 @@ function renderList(){
     </div>`;
   }).join("");
 }
-
+document.addEventListener("click",function(e){
+  const card=e.target.closest(".stock-card");
+  if(card){openDetail(card.dataset.id);}
+});
 function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
 function openForm(id){
