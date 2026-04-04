@@ -265,7 +265,7 @@ function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace
 
 function openForm(id){
   editId=id;
-  const s=id?stocks.find(x=>x.id===id):{...EMPTY,id:Date.now().toString(),studiedAt:today()};
+  const s=id?stocks.find(x=>String(x.id)===String(id)):{...EMPTY,id:Date.now().toString(),studiedAt:today()};
   document.getElementById("formTitle").textContent=id?"종목 수정":"새 종목 추가";
   document.getElementById("delBtn").style.display=id?"":"none";
   document.getElementById("formBody").innerHTML=buildForm(s);
@@ -380,7 +380,7 @@ function deleteStock(){
 
 function openDetail(id){
   detailId=id;
-  const s=stocks.find(x=>x.id===id);if(!s)return;
+  const s=stocks.find(x=>String(x.id)===String(id));if(!s)return;
   document.getElementById("detailBody").innerHTML=buildDetail(s);
   show("detailOverlay");
 }
