@@ -378,7 +378,7 @@ function deleteStock(){
   if(!confirm("이 종목을 삭제할까요?"))return;
   stocks=stocks.filter(s=>String(s.id)!==String(editId));
   save();closeSheet("formOverlay");renderAll();
-  /*syncToSheet(true);*/
+  syncToSheet(true);
 }
 
 function openDetail(id){
@@ -456,8 +456,8 @@ async function syncFromSheet(){
     if(!data.ok){showToast("불러오기 실패");return;}
     if(!data.data.length){showToast("시트에 저장된 종목이 없어요.");return;}
     if(!confirm(`${data.data.length}개 종목을 불러올까요?\n현재 데이터에 병합됩니다.`))return;
-    const ids=new Set(stocks.map(s=>s.id));
-    data.data.forEach(s=>{if(!ids.has(s.id))stocks.push(s);});
+    const ids=new Set(stocks.map(s=>String(s.id)));
+    data.data.forEach(s=>{if(!ids.has(String(s.id)))stocks.push(s);});
     save();renderAll();showToast("불러오기 완료!");
   }catch(e){showToast("오류: "+e.message);}
 }
