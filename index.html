@@ -31,7 +31,6 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 .count-badge{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:4px;}
 .export-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
 .export-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
-.sync-status{font-family:var(--mono);font-size:10px;color:var(--text3);padding:2px 0;}
 .search-wrap{position:relative;}
 .search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 34px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;transition:border-color .2s;}
 .search-wrap input:focus{border-color:var(--accent);}
@@ -142,16 +141,13 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
       <input type="search" placeholder="모든 내용 검색..." id="searchInput" oninput="renderList()"/>
     </div>
   </div>
-
   <div class="filter-bar" id="filterBar"></div>
-
   <div class="cond-bar">
     <span>PER 이하</span>
     <input type="number" id="perFilter" placeholder="예: 15" oninput="renderList()"/>
     <span>PBR 이하</span>
     <input type="number" id="pbrFilter" placeholder="예: 1.5" oninput="renderList()"/>
   </div>
-
   <div class="list-area" id="listArea"></div>
   <button class="fab" onclick="openForm(null)">+</button>
 </div>
@@ -187,7 +183,7 @@ html,body{height:100%;background:var(--bg);overflow:hidden;}
 <div class="toast" id="toast"></div>
 
 <script>
-const GAS_URL="https://script.google.com/macros/s/AKfycbw99gPB1pAS6sD5PxJvx735ToIco8K6beX_O-uR693qIJcAcKddZhT2RNHwTK2b6ITX/exec";
+const GAS_URL="https://script.google.com/macros/s/AKfycbziubf4ve-SIXuddP2ATphqFX9M33DekBjJFz-W5mqLQOOAw3ozVqEE-GdVUjI6Rhpe/exec";
 const SECTORS=["반도체","디스플레이","2차전지","자동차","바이오/제약","IT서비스","게임","엔터","화학","철강/소재","금융/보험","건설/부동산","소비재","에너지","방산/항공","유통/물류","기계/설비","기타"];
 const MARKETS=["KOSPI","KOSDAQ"];
 const LEVELS=[
@@ -197,15 +193,57 @@ const LEVELS=[
   {v:"core",label:"핵심 관심",color:"#FDF0E6",dot:"#C96A30"},
 ];
 const EMPTY={id:null,name:"",ticker:"",market:"KOSPI",sector:"",studiedAt:today(),bizSummary:"",mainClients:"",competitors:"",moat:"",marketCap:"",revenueDir:"",debtLevel:"",profitStatus:"",growthDriver:"",riskFactors:"",momentum:"",per:"",pbr:"",pricePosition:"",valuation:"",interestLevel:"hold",buyCondition:"",memo:""};
+
 let stocks=[];
+let savedSnapshot={};  // 마지막 시트저장 시점의 스냅샷
 let filterLevel="all";
 let editId=null;
 let detailId=null;
 
 function today(){return new Date().toISOString().split("T")[0];}
 function linfo(v){return LEVELS.find(l=>l.v===v)||LEVELS[1];}
-function load(){try{const d=localStorage.getItem("ss_stocks");if(d)stocks=JSON.parse(d);}catch(e){}renderAll();}
-function save(){try{localStorage.setItem("ss_stocks",JSON.stringify(stocks));}catch(e){}}
+
+function fp(s){
+  // id 제외한 나머지 값으로 지문 생성
+  const n={};
+  Object.keys(s).forEach(k=>{if(k!=="id")n[k]=String(s[k]||"").trim();});
+  return JSON.stringify(n);
+}
+
+function load(){
+  try{
+    const d=localStorage.getItem("ss_stocks");
+    if(d)stocks=JSON.parse(d);
+    const snap=localStorage.getItem("ss_snapshot");
+    if(snap)savedSnapshot=JSON.parse(snap);
+  }catch(e){}
+  renderAll();
+}
+
+function save(){
+  try{localStorage.setItem("ss_stocks",JSON.stringify(stocks));}catch(e){}
+}
+
+function saveSnapshot(){
+  // 현재 stocks 상태를 스냅샷으로 저장
+  const snap={};
+  stocks.forEach(s=>snap[String(s.id)]=fp(s));
+  savedSnapshot=snap;
+  try{localStorage.setItem("ss_snapshot",JSON.stringify(snap));}catch(e){}
+}
+
+function getChanged(){
+  // 스냅샷과 비교해서 바뀐 종목만 반환
+  return stocks.filter(s=>{
+    const id=String(s.id);
+    if(!savedSnapshot[id])return true;  // 신규
+    return savedSnapshot[id]!==fp(s);   // 수정
+  }).map(s=>{
+    const id=String(s.id);
+    return {...s, _type: savedSnapshot[id] ? "수정" : "신규"};
+  });
+}
+
 function renderAll(){document.getElementById("cnt").textContent=stocks.length+" 종목";renderTabs();renderList();}
 
 function showToast(msg){
@@ -260,10 +298,12 @@ function renderList(){
     </div>`;
   }).join("");
 }
+
 document.addEventListener("click",function(e){
   const card=e.target.closest(".stock-card");
-  if(card){openDetail(card.dataset.id);}
+  if(card)openDetail(card.dataset.id);
 });
+
 function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
 function openForm(id){
@@ -368,17 +408,15 @@ function saveStock(){
   const name=gv("f_name").trim();
   if(!name){alert("종목명을 입력해주세요.");return;}
   const s={id:editId||Date.now().toString(),name,ticker:gv("f_ticker").trim(),market:gv("f_market"),sector:gv("f_sector"),studiedAt:gv("f_studiedAt"),bizSummary:gv("f_bizSummary").trim(),mainClients:gv("f_mainClients").trim(),competitors:gv("f_competitors").trim(),moat:gv("f_moat").trim(),marketCap:gv("f_marketCap").trim(),revenueDir:gv("f_revenueDir"),debtLevel:gv("f_debtLevel"),profitStatus:gv("f_profitStatus"),growthDriver:gv("f_growthDriver").trim(),riskFactors:gv("f_riskFactors").trim(),momentum:gv("f_momentum").trim(),per:gv("f_per").trim(),pbr:gv("f_pbr").trim(),pricePosition:gv("f_pricePosition"),valuation:gv("f_valuation"),interestLevel:gv("f_interestLevel")||"hold",buyCondition:gv("f_buyCondition").trim(),memo:gv("f_memo").trim()};
-  const idx=stocks.findIndex(x=>x.id===editId);
+  const idx=stocks.findIndex(x=>String(x.id)===String(editId));
   if(idx>=0)stocks[idx]=s;else stocks.push(s);
   save();closeSheet("formOverlay");renderAll();
-  syncToSheet(true);
 }
 
 function deleteStock(){
   if(!confirm("이 종목을 삭제할까요?"))return;
   stocks=stocks.filter(s=>String(s.id)!==String(editId));
   save();closeSheet("formOverlay");renderAll();
-  syncToSheet(true);
 }
 
 function openDetail(id){
@@ -437,15 +475,32 @@ function closeSheet(id){document.getElementById(id).style.display="none";}
 function overlayClose(e,id){if(e.target===e.currentTarget)closeSheet(id);}
 
 /* ── 구글 시트 동기화 ── */
-async function syncToSheet(silent=false){
-  if(!stocks.length){if(!silent)showToast("저장된 종목이 없어요.");return;}
+async function syncToSheet(){
+  if(!stocks.length){showToast("저장된 종목이 없어요.");return;}
   try{
-    if(!silent)showToast("구글 시트에 저장 중...");
-    const res=await fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"save",stocks}),headers:{"Content-Type":"text/plain"}});
-    const data=await res.json();
-    if(data.ok)showToast("☁ 시트 저장 완료!");
-    else if(!silent)showToast("저장 실패: "+data.msg);
-  }catch(e){if(!silent)showToast("오류: "+e.message);}
+    const changed=getChanged();
+    showToast("구글 시트에 저장 중...");
+
+    // 1. 전체 종목 저장
+    await fetch(GAS_URL,{
+      method:"POST",
+      body:JSON.stringify({action:"save",stocks}),
+      headers:{"Content-Type":"text/plain"}
+    });
+
+    // 2. 변경된 종목만 백업
+    if(changed.length){
+      await fetch(GAS_URL,{
+        method:"POST",
+        body:JSON.stringify({action:"backup",changed}),
+        headers:{"Content-Type":"text/plain"}
+      });
+    }
+
+    // 3. 스냅샷 업데이트
+    saveSnapshot();
+    showToast(changed.length ? `☁ 저장 완료 (변경 ${changed.length}건 백업)` : "☁ 저장 완료 (변경 없음)");
+  }catch(e){showToast("오류: "+e.message);}
 }
 
 async function syncFromSheet(){
@@ -458,7 +513,10 @@ async function syncFromSheet(){
     if(!confirm(`${data.data.length}개 종목을 불러올까요?\n현재 데이터에 병합됩니다.`))return;
     const ids=new Set(stocks.map(s=>String(s.id)));
     data.data.forEach(s=>{if(!ids.has(String(s.id)))stocks.push(s);});
-    save();renderAll();showToast("불러오기 완료!");
+    save();
+    saveSnapshot();
+    renderAll();
+    showToast("불러오기 완료!");
   }catch(e){showToast("오류: "+e.message);}
 }
 
@@ -478,8 +536,8 @@ function importJSON(e){
       const data=JSON.parse(ev.target.result);
       if(!Array.isArray(data))throw new Error();
       if(!confirm(`${data.length}개 종목을 불러올까요? 기존 데이터에 병합됩니다.`))return;
-      const ids=new Set(stocks.map(s=>s.id));
-      data.forEach(s=>{if(!ids.has(s.id))stocks.push(s);});
+      const ids=new Set(stocks.map(s=>String(s.id)));
+      data.forEach(s=>{if(!ids.has(String(s.id)))stocks.push(s);});
       save();renderAll();showToast("JSON 불러오기 완료!");
     }catch{showToast("올바른 파일이 아니에요.");}
   };
